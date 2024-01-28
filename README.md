@@ -1,1 +1,1 @@
-# GAN_Auto_Encorder_practice
+# GAN_Auto_Encorder
