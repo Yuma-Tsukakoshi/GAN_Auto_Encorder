@@ -53,3 +53,5 @@ def make_filepath_list(rootpath):
         val_anno_list.append(anno_path)
         
     return train_img_list, train_anno_list, val_img_list, val_anno_list
+
+

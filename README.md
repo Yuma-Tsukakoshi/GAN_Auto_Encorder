@@ -1,6 +1,5 @@
 # GAN_Auto_Encorder
 
-
 # Topic:
 Introduction to Object Detection, GANs, Auto_encoders, and Image Processing
 
