@@ -2,12 +2,12 @@
 
 
 # Topic:
-Introduction to Object Detection, GANs, Autoencoders, and Image Processing
+Introduction to Object Detection, GANs, Auto_encoders, and Image Processing
 
 # Technologies:
 PyTorch and TensorFlow 2
 
 # Uses
-- Jupyter Notebook : excute proggram
-- Colaboratory : learn image data
-- Spyder : define class and function
+- Jupyter Notebook : Execute program
+- Colaboratory : Learn image data
+- Spyder : Define class and function
