@@ -136,3 +136,4 @@ class GetBBoxAndLabel(object):
             annotation += [bndbox]
             
         return np.array(annotation)
+
