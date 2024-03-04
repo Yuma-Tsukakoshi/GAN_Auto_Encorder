@@ -161,3 +161,33 @@ class RandomLightNoise(object):
 '''
 10. 色チャネルの並び順を変えるクラス
 '''
+class SwapChannesls(object):
+    def __init__(self, swaps):
+        '''
+        Args:
+            swaps (int triple): final order of channels
+                ex) (2, 1, 0)
+        '''
+        self.swaps = swaps
+    
+    def __call__(self, image):
+        '''
+        Args:
+            image (Tensor): image tensor to be transformed
+        
+        Return:
+            a tensor with channels swapped according to swap
+        '''
+        # if torch.is_tensor(image):
+        # tensor型からnumpy型に変換
+        #     image = image.data.cpu().numpy() 
+        # else:
+        #     image = np.array(image)
+            
+        image = image[:,:,self.swaps]
+        return image
+    
+    '''
+    11. 輝度(明るさ)、彩度、色相、コントラストを変化させ、歪みを加えるクラス
+    '''
+    
