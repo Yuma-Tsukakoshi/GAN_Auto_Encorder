@@ -2,6 +2,7 @@
 1. データの拡張処理を行うクラス
 '''
 
+from typing import Any
 import cv2
 import numpy as np
 from numpy import random
@@ -137,3 +138,26 @@ class RandomHue(object):
         
         return image, boxes, labels
     
+'''
+9. 測光に歪みを加えるクラス → 光の当たり方を変える
+'''
+class RandomLightNoise(object):
+    def __init__(self):
+        self.perms = (
+            (0,1,2), (0,2,1),
+            (1,0,2), (1,2,0),
+            (2,0,1), (2,1,0)
+        )
+        
+    def __call__(self, image, boxes=None, labels=None):
+        if random.randint(2):
+            swap = self.perms[random.randint(len(self.perms))]
+            shuffle = SwapChannels(swap)
+            image = shuffle(image)
+        
+        return swap, boxes, labels
+    
+
+'''
+10. 色チャネルの並び順を変えるクラス
+'''
