@@ -1,7 +1,6 @@
 '''
 1. データの拡張処理を行うクラス
 '''
-
 from typing import Any
 import cv2
 import numpy as np
@@ -30,7 +29,6 @@ class Compose(object):
 '''
 2. ピクセルデータのint型をfloat型に変換するクラス
 '''
-
 class ConvertFromInts(object):
     def __call__(self, image, boxes=None, labels=None):
         return image.astype(np.float32), boxes, labels
@@ -38,7 +36,6 @@ class ConvertFromInts(object):
 '''
 3. アノテーションデータの正規化を元に戻すクラス
 '''
-
 class ToAbsoluteCoords(object):
     # boxes: [xmin, ymin, xmax, ymax] widthとheightで割って正規化された座標を用いていたのでかけて戻す
     def __call__(self, image, boxes=None, labels=None):
@@ -53,7 +50,6 @@ class ToAbsoluteCoords(object):
 '''
 4. 輝度(明るさ)をランダムに変化させるクラス
 '''
-
 class RandomBrightness(object):
     def __init__(self, delta=32):
         assert delta >= 0.0
@@ -70,7 +66,6 @@ class RandomBrightness(object):
 '''
 5. コントラストをランダムに変化させるクラス
 '''
-
 class RandomContrast(object):
     def __init__(self, lower=0.5, upper=1.5):
         self.lower = lower
@@ -161,7 +156,7 @@ class RandomLightNoise(object):
 '''
 10. 色チャネルの並び順を変えるクラス
 '''
-class SwapChannesls(object):
+class SwapChannels(object):
     def __init__(self, swaps):
         '''
         Args:
@@ -187,7 +182,42 @@ class SwapChannesls(object):
         image = image[:,:,self.swaps]
         return image
     
-    '''
-    11. 輝度(明るさ)、彩度、色相、コントラストを変化させ、歪みを加えるクラス
-    '''
+'''
+11. 輝度(明るさ)、彩度、色相、コントラストを変化させ、歪みを加えるクラス
+'''
+class PhotometricDistort(object):
+    def __init__(self):
+        self.pd = [
+            #コントラスト(BGRに適用)
+            RandomContrast(),
+            #カラーモデルをHSVにコンバート
+            ConvertColor(transform='HSV'),
+            #彩度の変化(HSVに適用
+            RandomSaturation(),
+            #色相の変化(HSVに適用)
+            RandomHue(),
+            # カラーモデルをHSVからBGRにコンバート
+            ConvertColor(current='HSV', transform='BGR'),
+            #コントラストの変化(BGRに適用)
+            RandomContrast()
+        ]
     
+        # 輝度
+        self.rand_brightness = RandomBrightness() # instanceの生成
+        # 測光の歪み
+        self.rand_light_noise = RandomLightNoise() 
+    
+    def __call__(self, image, boxes, labels):
+        im = image.copy()
+        #明るさの変化
+        im, boxes, labels = self.rand_brightness(im, boxes, labels) # callメソッドの実行
+        # 彩度、色相、コントラストの適用は上限と下限の間でランダムに
+        # 歪みオフセットを選択することにより、確率0.5で適用
+        if random.randint(2):
+            distort = Compose(self.pd[:-1])
+        else:
+            distort = Compose(self.pd[:-1])
+        
+        # 彩度、色相、コントラストの適用
+        im, boxes, labels = distort(im, boxes, labels)
+        return self.rand_light_noise(im, boxes, labels)
