@@ -213,11 +213,33 @@ class PhotometricDistort(object):
         im, boxes, labels = self.rand_brightness(im, boxes, labels) # callメソッドの実行
         # 彩度、色相、コントラストの適用は上限と下限の間でランダムに
         # 歪みオフセットを選択することにより、確率0.5で適用
-        if random.randint(2):
+        if random.randint(2): # コントラストの変化を始めに適用するか後に適用するか
             distort = Compose(self.pd[:-1])
         else:
-            distort = Compose(self.pd[:-1])
+            distort = Compose(self.pd[1:])
         
         # 彩度、色相、コントラストの適用
         im, boxes, labels = distort(im, boxes, labels)
+        
         return self.rand_light_noise(im, boxes, labels)
+
+'''
+12. イメージをランダムに拡大するクラス
+'''
+class Expand(object):
+    def __init__(self, mean):
+        self.mean = mean
+    
+    def __call__(self, image, boxes. labels):
+        if random.randint(2):
+            return image, boxes, labels
+
+        height, width, depth = image.shape
+        ratio = random.uniform(1, 4)
+        # 計算方法 → 画像のサイズをratio倍に拡大し、最後に元の画像サイズになるように余白を追加
+        left = random.uniform(0, width*ratio - width)
+        top = random.uniform(0, height*ratio - height)
+        
+        expand_image = np.zeros(
+            
+        )
