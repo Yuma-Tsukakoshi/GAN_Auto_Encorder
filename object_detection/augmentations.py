@@ -267,3 +267,39 @@ class RandomMirror(object):
             boxes[:, 0::2] = width - boxes[:, 2::-2] # boxes[:, 2::-2]: バウンディングボックスの右端と左端の座標を反転順序で取得
         
         return image, boxes, classes
+    
+'''
+14. アノテーションデータを0~1.0の範囲に正規化するクラス
+'''
+class ToPercentCoords(object):
+    def __call__(self, image, boxes=None, labels=None):
+        height, width, _ = image.shape
+        boxes[:, 0] /= width
+        boxes[:, 2] /= width
+        boxes[:, 1] /= height
+        boxes[:, 3] /= height
+        
+        return image, boxes, labels
+    
+'''
+15. イメージのサイズをinput_sizeにリサイズするクラス
+'''
+class Resize(object):
+    def __init__(self, size=300):
+        self.size = size
+        
+    def __call__(self, image, boxes=None, labels=None):
+        image = cv2.resize(image, (self.size, self.size))
+        return image, boxes, labels
+
+'''
+16. 色情報(RGB値)から平均値を引き算するクラス 
+'''
+class SubstractMeans(object):
+    def __init__(self, mean):
+        self.mean = np.array(mean, dtype=np.float32)
+    
+    def __call__(self, image, boxes=None, labels=None):
+        image = image.astype(np.float32)
+        image -= self.mean
+        return image.astype(np.float32), boxes, labels
