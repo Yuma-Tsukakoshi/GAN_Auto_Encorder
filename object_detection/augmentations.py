@@ -258,3 +258,12 @@ class Expand(object):
 '''
 13. イメージの左右をランダムに反転させるクラス
 '''
+class RandomMirror(object):
+    def __call__(self, image, boxes, classes):
+        _, width, _ = image.shape
+        if random.randint(2):
+            image = image[:, ::-1] # ::-1: スライスステップを -1 に設定することで、画像の各行を反転順序で取得
+            boxes = boxes.copy()
+            boxes[:, 0::2] = width - boxes[:, 2::-2] # boxes[:, 2::-2]: バウンディングボックスの右端と左端の座標を反転順序で取得
+        
+        return image, boxes, classes
