@@ -230,16 +230,31 @@ class Expand(object):
     def __init__(self, mean):
         self.mean = mean
     
-    def __call__(self, image, boxes. labels):
+    def __call__(self, image, boxes, labels):
         if random.randint(2):
             return image, boxes, labels
 
         height, width, depth = image.shape
         ratio = random.uniform(1, 4)
-        # 計算方法 → 画像のサイズをratio倍に拡大し、最後に元の画像サイズになるように余白を追加
+        # 計算方法 → 画像のサイズをratio倍に拡大し、最後に元の画像サイズを除くことで拡大した画像の余白を計算
         left = random.uniform(0, width*ratio - width)
         top = random.uniform(0, height*ratio - height)
         
         expand_image = np.zeros(
-            
-        )
+            (int(height*ratio), (int)(width*ratio), depth),
+            dtype = image.dtype) # dtypeは元の画像と同じにする
+        
+        expand_image[:, :, :] = self.mean # 色味の平均値で拡大されたキャンバスを埋める
+        expand_image[int(top):int(top + height),
+                    int(left):int(left + width)] = image
+        image = expand_image
+        
+        boxes = boxes.copy()
+        boxes[:,:2] += (int(left), int(top))  
+        boxes[:,2:] += (int(left), int(top))
+        
+        return image, boxes, labels
+
+'''
+13. イメージの左右をランダムに反転させるクラス
+'''
