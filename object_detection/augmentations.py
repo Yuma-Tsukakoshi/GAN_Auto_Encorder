@@ -303,3 +303,13 @@ class SubstractMeans(object):
         image = image.astype(np.float32)
         image -= self.mean
         return image.astype(np.float32), boxes, labels
+    
+'''
+17. 2セットのBBoxの重なる部分を検出する
+'''
+
+def intersect(box_a, box_b):
+    max_xy = np.minimum(box_a[:, 2:], box_b[2:])
+    min_xy = np.maximum(box_a[:, :2], box_b[:2])
+    inter = np.clip()
+    # 各データの内部構造を把握する
