@@ -26,6 +26,7 @@ def make_filepath_list(rootpath):
     imgpath_template = osp.join(rootpath, 'JPEGImages', '%s.jpg')
     annopath_template = osp.join(rootpath, 'Annotations', '%s.xml')
     
+    # + は文字列の結合してからjoin(, で結合されない限りpathの結合はない)
     train_id_names = osp.join(rootpath + 'ImageSets/Main/train.txt')
     val_id_names = osp.join(rootpath + 'ImageSets/Main/val.txt')
     
