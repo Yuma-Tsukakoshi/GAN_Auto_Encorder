@@ -308,9 +308,64 @@ class SubstractMeans(object):
 '''
 17. 2セットのBBoxの重なる部分を検出する
 '''
-
 def intersect(box_a, box_b):
-    max_xy = np.minimum(box_a[:, 2:], box_b[2:])
-    min_xy = np.maximum(box_a[:, :2], box_b[:2])
-    inter = np.clip()
-    # 各データの内部構造を把握する
+    max_xy = np.minimum(box_a[:, 2:], box_b[2:]) # 右上の座標で小さい方を採用
+    min_xy = np.maximum(box_a[:, :2], box_b[:2]) # 左下で座標の大きい方を採用
+    inter = np.clip((max_xy - min_xy), a_min=0, a_max=np.inf) # np.clip: 配列の要素を指定した範囲内に収める
+    return inter[:,0] * inter[:,1] # 共通部分の面積を計算
+
+'''
+18. 2セットのBBoxの類似度を示すジャッカード係数を計算する
+'''
+def jaccard_numpy(box_a, box_b):
+    '''
+    Args:
+        box_a : Multiple BBox, shape: [num_boxes, 4] → BBoxの座標
+        box_b : Single BBox, shape: [4] →  トリミング用の長方形
+
+    Returns:
+        jaccard overlap : shape: [box_a.shape[0], box_a.shape[1]]
+    '''
+    inter = intersect(box_a, box_b)
+    area_a = ((box_a[:, 2] - box_a[:, 0]) * (box_a[:, 3] - box_a[:, 1]))
+    area_b = ((box_b[2] - box_b[0]) * (box_b[3] - box_b[1]))
+    union = area_a + area_b - inter 
+    return inter / union
+
+'''
+19. イメージの特定の領域をランダムに切り出すクラス 
+'''
+class RandomSampleCrop(object):
+    '''
+    イメージの切り出しに合わせてバウンディングボックスも変形させる
+    
+    Arguments:
+        img (Image): トレーニング中に入力されるイメージ
+        boxes (Tensor): オリジナルのバウンディングボックス
+        labels (Tensor): バウンディングボックスのラベル
+        mode; (float tuple): 2セットのBBoxの類似度を示すジャッカード係数
+        
+    Return:
+        (img, boxes, classes)
+            img (Image) : トリミングされたイメージ
+            boxes (Tensor): 調整後のバウンディングボックス
+            labels (Tensor): バウンディングボックスのラベル
+    '''
+    
+    # TODO： ここの理解から次スタート
+    def __init__(self):
+        self.sample_options = (
+            # 元の入力イメージをそのまま使用
+            None, 
+            # 0.1 ~ 1.0の範囲でランダムにサンプリング
+            (0.1, None), 
+            (0.3, None),
+            (0.7, None),
+            (0.9, None),
+            # バッチをランダムにサンプリング
+            (None, None)
+        )
+        
+        self.sample_options = np.array(self.sample_options, dtype=object)
+    
+
