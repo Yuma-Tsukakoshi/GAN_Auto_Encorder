@@ -64,7 +64,7 @@ class RandomBrightness(object):
         return image, boxes, labels
     
 '''
-5. コントラストをランダムに変化させるクラス
+5. コントラスト(明るいところは明るく、暗いところは暗く)をランダムに変化させるクラス
 '''
 class RandomContrast(object):
     def __init__(self, lower=0.5, upper=1.5):
@@ -101,7 +101,7 @@ class ConvertColor(object):
         return image, boxes, labels
 
 '''
-7. 彩度をランダムに変化させるクラス HSVのSに相当
+7. 彩度をランダムに変化させるクラス HSV : 色相(Hue)[:,:,0]、彩度(Saturation)[:,:,1]、明度(Value)[:,:,2]
 '''
 class RandomSaturation(object):
     def __init__(self, lower=0.5, upper=1.5):
@@ -121,7 +121,6 @@ class RandomSaturation(object):
 '''
 class RandomHue(object):
     def __init__(self, delta=18.0):
-        # andで条件を結合
         assert delta >= 0.0 and delta <= 360.0
         self.delta = delta
     
@@ -136,7 +135,7 @@ class RandomHue(object):
 '''
 9. 測光に歪みを加えるクラス → 光の当たり方を変える
 '''
-class RandomLightNoise(object):
+class RandomLightingNoise(object):
     def __init__(self):
         self.perms = (
             (0,1,2), (0,2,1),
@@ -203,17 +202,17 @@ class PhotometricDistort(object):
         ]
     
         # 輝度
-        self.rand_brightness = RandomBrightness() # instanceの生成
+        self.rand_brightness = RandomBrightness() 
         # 測光の歪み
-        self.rand_light_noise = RandomLightNoise() 
+        self.rand_light_noise = RandomLightingNoise() 
     
     def __call__(self, image, boxes, labels):
         im = image.copy()
-        #明るさの変化
-        im, boxes, labels = self.rand_brightness(im, boxes, labels) # callメソッドの実行
-        # 彩度、色相、コントラストの適用は上限と下限の間でランダムに
-        # 歪みオフセットを選択することにより、確率0.5で適用
-        if random.randint(2): # コントラストの変化を始めに適用するか後に適用するか
+        # 輝度の変化
+        im, boxes, labels = self.rand_brightness(im, boxes, labels) 
+
+        # データオーギュメンテーションでよく使われる手法(コントラストの順序をあえて変える)
+        if random.randint(2):
             distort = Compose(self.pd[:-1])
         else:
             distort = Compose(self.pd[1:])
@@ -237,6 +236,7 @@ class Expand(object):
         height, width, depth = image.shape
         ratio = random.uniform(1, 4)
         # 計算方法 → 画像のサイズをratio倍に拡大し、最後に元の画像サイズを除くことで拡大した画像の余白を計算
+        # 背景 : 仮にキャンパス内にランダムで座標を確定した後に、横幅や縦幅が元の画像サイズを超えると切れてしまう
         left = random.uniform(0, width*ratio - width)
         top = random.uniform(0, height*ratio - height)
         
@@ -250,8 +250,8 @@ class Expand(object):
         image = expand_image
         
         boxes = boxes.copy()
-        boxes[:,:2] += (int(left), int(top))  
-        boxes[:,2:] += (int(left), int(top))
+        boxes[:,:2] += (int(left), int(top))  # xmin, ymin
+        boxes[:,2:] += (int(left), int(top))  # xmax, ymax
         
         return image, boxes, labels
 
@@ -262,9 +262,10 @@ class RandomMirror(object):
     def __call__(self, image, boxes, classes):
         _, width, _ = image.shape
         if random.randint(2):
-            image = image[:, ::-1] # ::-1: スライスステップを -1 に設定することで、画像の各行を反転順序で取得
+            image = image[:, ::-1] # ::-1: スライスステップを -1 に設定することで、画像の各行を反転順序で取得 チャネルは保持
             boxes = boxes.copy()
-            boxes[:, 0::2] = width - boxes[:, 2::-2] # boxes[:, 2::-2]: バウンディングボックスの右端と左端の座標を反転順序で取得
+            # boxes[:, 2::-2]: バウンディングボックスの右端と左端の座標を反転順序で取得 0:xmin,2:xmax → 2:xmax,0:xmin
+            boxes[:, 0::2] = width - boxes[:, 2::-2] # 画像の幅からの距離を計算 → 反転させる
         
         return image, boxes, classes
     
@@ -274,10 +275,10 @@ class RandomMirror(object):
 class ToPercentCoords(object):
     def __call__(self, image, boxes=None, labels=None):
         height, width, _ = image.shape
-        boxes[:, 0] /= width
-        boxes[:, 2] /= width
-        boxes[:, 1] /= height
-        boxes[:, 3] /= height
+        boxes[:, 0] /= width # xmin 
+        boxes[:, 2] /= width # xmax
+        boxes[:, 1] /= height # ymin
+        boxes[:, 3] /= height # ymax
         
         return image, boxes, labels
     
