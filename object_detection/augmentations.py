@@ -351,8 +351,6 @@ class RandomSampleCrop(object):
             boxes (Tensor): 調整後のバウンディングボックス
             labels (Tensor): バウンディングボックスのラベル
     '''
-    
-    # TODO： ここの理解から次スタート
     def __init__(self):
         self.sample_options = (
             # 元の入力イメージをそのまま使用
@@ -365,7 +363,79 @@ class RandomSampleCrop(object):
             # バッチをランダムにサンプリング
             (None, None)
         )
-        
+        # 警告を無視するためにobject型のndarrayに変換
         self.sample_options = np.array(self.sample_options, dtype=object)
-    
-
+        
+    def __call__(self, image, boxes=None, labels=None):
+        height, width, _ = image.shape
+        while True:
+            # ランダムにサンプリング
+            mode = random.choice(self.sample_options)
+            if mode is None:
+                return image, boxes, labels
+            
+            #iou : 2セットのBBoxの類似度を示すジャッカード係数
+            min_iou, max_iou = mode
+            # float型にinfinityを設定する
+            if min_iou is None:
+                min_iou = float('-inf')
+            if max_iou is None:
+                max_iou = float('inf')
+            
+            # トリミングの試行回数
+            for _ in range(50):
+                current_image = image
+                
+                w = random.uniform(0.3 * width, width)
+                h = random.uniform(0.3 * height, height)
+                
+                # アスペクト比が1/2 ~ 2の範囲でランダムにサンプリング
+                if h / w < 0.5 or h / w > 2:
+                    continue
+                
+                left = random.uniform(width - w)
+                top = random.uniform(height - h)
+                
+                # イメージからトリミングする領域を作る
+                # x1, y1, x2, y2を整数(int)に変換
+                rect = np.array([int(left), int(top), int(left+w), int(top+h)])
+                overlap = jaccard_numpy(boxes, rect)
+                
+                if overlap.min() < min_iou and max_iou < overlap.max():
+                    continue
+                
+                # イメージから切り抜く : height, widthの順
+                current_image = current_image[rect[1]:rect[3], rect[0]:rect[2], :]
+                
+                # box: xmin, ymin, xmax, ymax
+                # gt boxの中心座標がトリミング後の画像の中にあるかどうかを確認
+                centers = (boxes[:, :2] + boxes[:, 2:]) / 2.0
+                
+                # 左上側にある全てのgt boxをマスクする
+                m1 = (rect[0] < centers[:, 0]) * (rect[1] < centers[:, 1])
+                
+                # 右下側にある全てのgt boxをマスクする
+                m2 = (rect[2] > centers[:, 0]) * (rect[3] > centers[:, 1])
+                
+                mask = m1 * m2
+                
+                # 1つ以上のgt boxが残っているかどうかを確認
+                if not mask.any():
+                    continue
+                
+                # gt boxを取得
+                current_boxes = boxes[mask, :].copy()
+                
+                # gt boxのラベルを取得
+                current_labels = labels[mask]
+                
+                # ボックスの左上隅を利用する
+                current_boxes[:, :2] = np.maximum(current_boxes[:, :2], rect[:2])
+                
+                # トリミングされた状態に合わせる
+                current_boxes[:, :2] -= rect[:2]
+                current_boxes[:, 2:] = np.minimum(current_boxes[:, 2:], rect[2:])
+                
+                current_boxes[:, 2:] -= rect[:2]
+                return current_image, current_boxes, current_labels
+                
