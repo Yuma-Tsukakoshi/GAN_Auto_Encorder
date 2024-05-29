@@ -138,3 +138,20 @@ class GetBBoxAndLabel(object):
             
         return np.array(annotation)
 
+'''
+3. イメージのアノテーションの前処理を行うDataTransformクラス
+
+'''
+from augmentations import Compose, ConvertFromInts, ToAbsoluteCoords, PhotometricDistort, Expand, RandomSampleCrop, RandomMirror, ToPercentCoords, Resize, SubtractMeans
+
+class DataTransform(object):
+    ''' データの前処理クラス
+    イメージのサイズを300x300にする
+    訓練時は拡張処理を行う
+    
+    Attributes
+    ----------
+    data_transform(dict): 前処理メソッドを格納した辞書
+    '''
+    
+    

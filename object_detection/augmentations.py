@@ -296,7 +296,7 @@ class Resize(object):
 '''
 16. 色情報(RGB値)から平均値を引き算するクラス 
 '''
-class SubstractMeans(object):
+class SubtractMeans(object):
     def __init__(self, mean):
         self.mean = np.array(mean, dtype=np.float32)
     
