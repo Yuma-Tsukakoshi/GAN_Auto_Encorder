@@ -336,6 +336,7 @@ def jaccard_numpy(box_a, box_b):
 19. イメージの特定の領域をランダムに切り出すクラス 
 '''
 class RandomSampleCrop(object):
+    # TODO: サンプリング後のサイズの調整を理解する
     '''
     イメージの切り出しに合わせてバウンディングボックスも変形させる
     
